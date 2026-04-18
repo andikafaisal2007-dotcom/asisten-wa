@@ -1,5 +1,5 @@
 import os
-import anthropic
+import requests
 from context_builder import build_context, format_context_for_prompt
 
 SYSTEM_PROMPT_TEMPLATE = """
@@ -23,9 +23,6 @@ KONTEKS PERSONAL PENGGUNA SAAT INI:
 {personal_context}
 
 Waktu sekarang: {current_time}
-
-Gunakan semua informasi di atas untuk memberikan respons yang
-terasa personal, spesifik, dan relevan dengan kondisi pengguna.
 """
 
 def get_assistant_response(
@@ -53,15 +50,23 @@ def get_assistant_response(
         "content": user_message
     })
 
-    client = anthropic.Anthropic(
-        api_key=os.environ.get("ANTHROPIC_API_KEY")
+    headers = {
+        "Authorization": f"Bearer {os.environ.get('GROQ_API_KEY')}",
+        "Content-Type": "application/json"
+    }
+
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [
+            {"role": "system", "content": system_prompt}
+        ] + messages,
+        "max_tokens": 1024
+    }
+
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers=headers,
+        json=payload
     )
 
-    response = client.messages.create(
-        model="claude-sonnet-4-20250514",
-        max_tokens=1024,
-        system=system_prompt,
-        messages=messages
-    )
-
-    return response.content[0].text
+    return response.json()["choices"][0]["message"]["content"]
