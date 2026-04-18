@@ -1,5 +1,9 @@
 flask
 anthropic
+twilioflask
+requests
 twilio
+apscheduler
+python-dotenv
 apscheduler
 python-dotenv
